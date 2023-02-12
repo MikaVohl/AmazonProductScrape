@@ -108,29 +108,3 @@ root.state('zoomed')
 
 # Run the GUI
 root.mainloop()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
