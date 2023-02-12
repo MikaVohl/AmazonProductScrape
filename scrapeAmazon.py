@@ -4,49 +4,26 @@ import random
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 import xlsxwriter
-
+import tkinter as tk
+from tkinter import filedialog
 
 # Initializes variables
-linkPart = ""
 masterList = []
-col = 0
-pgNum = 1
-linksList= []
-
 
 # Creates random user agent
-software_names = [SoftwareName.CHROME.value]
-operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value] 
-user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
-randomUserAgent = user_agent_rotator.get_random_user_agent()
-
+def randomAgent():
+    software_names = [SoftwareName.CHROME.value]
+    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value] 
+    user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=100)
+    return user_agent_rotator.get_random_user_agent()
 
 # Changes my headers
 headers = {
-    'User-Agent': randomUserAgent,
+    'User-Agent': randomAgent(),
     'Content-Type': 'text/html',
 }
 
-# Creates link from input
-print("ENTER ITEM:")
-item = input().split(" ")
-print("ENTER # OF AMAZON PAGES:")
-page = int(input())
-for count, i in enumerate(item):
-     linkPart += i
-     if count != len(item)-1:
-          linkPart += "+"
-for pgNum in range(1,page+1):
-    link = "https://www.amazon.ca/s?k="+linkPart+"&page="+str(pgNum)
-    linksList.append(link)
-
-
 def scrapePage(link):
-    # Error detection
-    if(requests.get(link, headers = headers).status_code != 200):
-            print("ERROR")
-
-
     # Gets html file from link
     html_text = requests.get(link, headers = headers).text
     soup = BeautifulSoup(html_text, "lxml")
@@ -72,14 +49,88 @@ def scrapePage(link):
             reviews = reviews[1:-1]
         temp = [name, price, rating, reviews]
         masterList.append(temp)
-    
-for currentLink in linksList:
-    scrapePage(currentLink)
+def save_text_to_file():
+    # GUI prompts and information
+    item = text_entry.get().split(" ") # input prompt
+    page = int(pages_entry.get()) # input number of pages
+    file_path = filedialog.asksaveasfilename(defaultextension=".xlsx")
+    text_entry.delete(0, tk.END) # emptys the prompt
+    pages_entry.delete(0, tk.END) # emptys the prompt
 
-# Creates xlsx file
-workbook = xlsxwriter.Workbook('results.xlsx')
-worksheet = workbook.add_worksheet()
-worksheet.write_row(0, 0, ["Product Name", "Price (USD)", "Rating (out of 5)", "Number of Reviews"])
-for row, data in enumerate(masterList):
-    worksheet.write_row(row+1, col, data)
-workbook.close()
+    # initialize variables
+    linkPart = ""
+    pgNum = 1
+    linksList = []
+
+    # create link
+    for count, i in enumerate(item):
+        linkPart += i
+        if count != len(item)-1:
+            linkPart += "+"
+
+    # create link array
+    for pgNum in range(1,page+1):
+        link = "https://www.amazon.ca/s?k="+linkPart+"&page="+str(pgNum)
+        linksList.append(link)
+
+    # iterate through links and scrape
+    for currentLink in linksList:
+        scrapePage(currentLink)
+
+    # Creates xlsx file
+    col = 0
+    workbook = xlsxwriter.Workbook(file_path)
+    worksheet = workbook.add_worksheet()
+    worksheet.write_row(0, 0, ["Product Name", "Price (USD)", "Rating (out of 5)", "Number of Reviews"])
+    for row, data in enumerate(masterList):
+        worksheet.write_row(row+1, col, data)
+    workbook.close()
+
+# Create GUI
+root = tk.Tk()
+root.title("Find Amazon Product Information")
+
+# Create / style input boxes
+text_label = tk.Label(root, text="Enter Product:", font=("Lato", 14))
+text_label.pack(pady=20)
+text_entry = tk.Entry(root, width=50, font=("Helvetica", 14)) # creates input box
+text_entry.pack(pady=20) # styles / makes input box visible
+pages_label = tk.Label(root, text="Enter Number of Pages to Search:", font=("Lato", 14))
+pages_label.pack(pady=20)
+pages_entry = tk.Entry(root, width=50, font=("Helvetica", 14)) # creates input box
+pages_entry.pack(pady=20) # styles / makes input box visible
+
+# Create / style save button
+save_button = tk.Button(root, text="Save Text to File", font=("Helvetica", 14), command=save_text_to_file)
+save_button.pack(pady=20)
+
+root.state('zoomed')
+
+# Run the GUI
+root.mainloop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
