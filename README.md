@@ -1,5 +1,5 @@
 # AmazonProductScrape
-Web-scraping program that prompts for a product and returns an XLSX file with all relevant information
+Web-scraping program using BeautifulSoup library in Python that prompts for a product and returns an XLSX file with all relevant information
 
 Returned information will include: Name, Price (USD), Rating, and Number of Reviews
 
